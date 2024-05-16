@@ -5,7 +5,7 @@ import nuestroCRUD.MiCRUD;
 public class App {
     public static void main(String[] args) {
         
-        MiCRUD miAcceso = new MiCRUD("banco");
+        MiCRUD miAcceso = new MiCRUD("bank");
         System.out.println("Creado objeto y url actualizada : " + miAcceso.getUrl());
         boolean continuar = miAcceso.initDriver();
         if (continuar){
