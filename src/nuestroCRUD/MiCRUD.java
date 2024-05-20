@@ -14,10 +14,6 @@ public class MiCRUD {
    private Connection connection;
    private Statement statement;
 
-   public String getUrl() {
-      return this.url;
-   }
-
    // constructor
    public MiCRUD(String baseDeDatos) {
       this.url = this.url.concat(baseDeDatos);
@@ -64,8 +60,27 @@ public class MiCRUD {
       }
    }
 
+   public boolean useStatement(String query){
+      try {
+         return (0==this.statement.executeUpdate(query));
+      } catch (SQLException e) {
+         return false;
+      }
+   }
+
    // create
-   public boolean createTable(String name, MyColumn[] columns, MyConstraint[] constraints) {
+   public String createTable(String name, MyColumn[] columns, MyConstraint[] constraints) {
+      if (columns==null || constraints==null){
+         return null;
+      } else {
+         for (MyColumn colActual : columns) {
+            if (colActual==null) return null;
+         }
+         for (MyConstraint constActual : constraints) {
+            if (constActual==null) return null;
+         }
+      }
+      
       String myQuery = "CREATE TABLE " + name + " (";
 
       for (int i = 0; i < columns.length; i++) {
@@ -84,19 +99,28 @@ public class MiCRUD {
          myQuery = myQuery + " CONSTRAINT " + constraints[j].getParams()[0];
          if (constraints[j].getParams().length == 2) { // primary key
             myQuery = myQuery + " PRIMARY KEY (";
-            myQuery = myQuery + constraints[j].getParams()[1] + "),";
+            myQuery = myQuery + constraints[j].getParams()[1] + ")";
          } else { // foreign key
             myQuery = myQuery + " FOREIGN KEY (";
             myQuery = myQuery + constraints[j].getParams()[1] + ")";
             myQuery = myQuery + " REFERENCES ";
             myQuery = myQuery + constraints[j].getParams()[2] + "(";
-            myQuery = myQuery + constraints[j].getParams()[3] + "),";
-
+            myQuery = myQuery + constraints[j].getParams()[3] + ")";
          }
-
+         myQuery = myQuery + ",";
       }
-      return true;
-      // copy and paste for the last element of constraints
+      myQuery = myQuery + " CONSTRAINT " + constraints[constraints.length-1].getParams()[0];
+      if (constraints[constraints.length-1].getParams().length == 2) { // primary key
+         myQuery = myQuery + " PRIMARY KEY (";
+         myQuery = myQuery + constraints[constraints.length-1].getParams()[1] + ")";
+      } else { // foreign key
+         myQuery = myQuery + " FOREIGN KEY (";
+         myQuery = myQuery + constraints[constraints.length-1].getParams()[1] + ")";
+         myQuery = myQuery + " REFERENCES ";
+         myQuery = myQuery + constraints[constraints.length-1].getParams()[2] + "(";
+         myQuery = myQuery + constraints[constraints.length-1].getParams()[3] + ")";        
+      }
+      return (myQuery + ");");
    }
    // read
    // update
