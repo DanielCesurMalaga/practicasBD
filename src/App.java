@@ -1,4 +1,4 @@
-import java.sql.SQLException;
+
 
 import nuestroCRUD.MiCRUD;
 import nuestroCRUD.MyColumn;
