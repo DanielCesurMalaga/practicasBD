@@ -27,8 +27,4 @@ public class MyConstraint {
       this.params = params;
    }
 
-   
-
-   
-   
 }

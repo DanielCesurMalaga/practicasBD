@@ -2,6 +2,8 @@ package nuestroCRUD;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -51,7 +53,7 @@ public class MiCRUD {
 
    public boolean createStatement() {
       try {
-         this.statement = connection.createStatement();
+         this.statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
          return true;
       } catch (SQLException e) {
          return false;
@@ -60,24 +62,18 @@ public class MiCRUD {
       }
    }
 
-   public boolean useStatement(String query){
-      try {
-         return (0==this.statement.executeUpdate(query));
-      } catch (SQLException e) {
-         return false;
-      }
-   }
-
    // create
-   public String createTable(String name, MyColumn[] columns, MyConstraint[] constraints) {
-      if (columns==null || constraints==null){
-         return null;
+   public boolean createTable(String name, MyColumn[] columns, MyConstraint[] constraints) {
+      if (columns == null || constraints == null) {
+         return false;
       } else {
          for (MyColumn colActual : columns) {
-            if (colActual==null) return null;
+            if (colActual == null)
+               return false;
          }
          for (MyConstraint constActual : constraints) {
-            if (constActual==null) return null;
+            if (constActual == null)
+               return false;
          }
       }
 
@@ -109,20 +105,110 @@ public class MiCRUD {
          }
          myQuery = myQuery + ", ";
       }
-      myQuery = myQuery + "CONSTRAINT " + constraints[constraints.length-1].getParams()[0];
-      if (constraints[constraints.length-1].getParams().length == 2) { // primary key
+      myQuery = myQuery + "CONSTRAINT " + constraints[constraints.length - 1].getParams()[0];
+      if (constraints[constraints.length - 1].getParams().length == 2) { // primary key
          myQuery = myQuery + " PRIMARY KEY (";
-         myQuery = myQuery + constraints[constraints.length-1].getParams()[1] + ")";
+         myQuery = myQuery + constraints[constraints.length - 1].getParams()[1] + ")";
       } else { // foreign key
          myQuery = myQuery + " FOREIGN KEY (";
-         myQuery = myQuery + constraints[constraints.length-1].getParams()[1] + ")";
+         myQuery = myQuery + constraints[constraints.length - 1].getParams()[1] + ")";
          myQuery = myQuery + " REFERENCES ";
-         myQuery = myQuery + constraints[constraints.length-1].getParams()[2] + "(";
-         myQuery = myQuery + constraints[constraints.length-1].getParams()[3] + ")";        
+         myQuery = myQuery + constraints[constraints.length - 1].getParams()[2] + "(";
+         myQuery = myQuery + constraints[constraints.length - 1].getParams()[3] + ")";
       }
-      return (myQuery + ");");
+      myQuery = myQuery + ");";
+
+      try {
+         return (0 == this.statement.executeUpdate(myQuery));
+      } catch (SQLException e) {
+         return false;
+      }
    }
-   // read
-   // update
-   // delete
+
+   // read = leer
+   public String[] readBD(String[] select, String[] from, String where) {
+      // select ... from ... where ...
+      if (select == null || from == null) {
+         return null;
+      } else {
+         for (String string : select) {
+            if (string == null)
+               return null;
+         }
+         for (String string : from) {
+            if (string == null)
+               return null;
+         }
+      }
+      String myQuery = "SELECT ";
+
+      for (int i = 0; i < select.length - 1; i++) {
+         myQuery = myQuery + select[i] + ", ";
+      }
+      myQuery = myQuery + select[select.length - 1] + " ";
+
+      myQuery = myQuery + "FROM ";
+      for (int i = 0; i < from.length - 1; i++) {
+         myQuery = myQuery + from[i] + ", ";
+      }
+      myQuery = myQuery + from[from.length - 1];
+
+      if (where != null) {
+         myQuery = myQuery + " WHERE " + where + ";";
+      } else {
+         myQuery = myQuery + ";";
+      }
+
+      try {
+         ResultSet resultSet = this.statement.executeQuery(myQuery);
+
+         int numRows = 0;
+         ResultSetMetaData metaData = resultSet.getMetaData();
+         int numCols = metaData.getColumnCount();
+         while (resultSet.next()) {
+            numRows = resultSet.getRow();
+         }
+         String[] vista = new String[numRows];
+         resultSet.beforeFirst();
+         for (int i = 0; i < vista.length; i++) {
+            resultSet.next();
+            vista[i] = "";
+            for (int j = 1; j < numCols; j++) {
+               vista[i] = vista[i] + resultSet.getString(j) + " / ";
+            }
+            vista[i] = vista[i] + resultSet.getString(numCols);
+         }
+         return vista;
+
+      } catch (SQLException e) {
+         System.out.println(e.getMessage());
+         return null;
+      }
+   }
+
+   // update = insertar
+
+   // delete 
+   // eliminar filas
+   public int deleteRows(String table, String condition) {
+      String query = "delete from " + table + " where " + condition + ";";
+      try {
+         return (this.statement.executeUpdate(query));
+      } catch (SQLException e) {
+         return -1;
+      }
+
+      
+   }
+   // eliminar tablas
+   public boolean dropTable(String table){
+      try {
+         this.statement.executeUpdate("DROP TABLE "+table+";");
+         return true;
+      } catch (SQLException e) {
+         System.out.println(e.getMessage());
+         return false;
+      }
+
+   }
 }

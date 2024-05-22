@@ -6,7 +6,11 @@ import nuestroCRUD.MyConstraint;
 
 public class App {
     public static void main(String[] args) {
-        MiCRUD miCRUD = new MiCRUD("bank");
+        MiCRUD miCRUD = new MiCRUD("ferreteria");
+
+        // miCRUD.initDriver();
+        miCRUD.initConnection();
+        miCRUD.createStatement();
 
         MyColumn[] columnas = new MyColumn[2];
         columnas[0] = new MyColumn();
@@ -21,15 +25,17 @@ public class App {
         restricciones[0] = new MyConstraint(true);
         restricciones[0].setParams(new String[] {"pk_nombre","nombre"});
 
-        miCRUD.initDriver();
-        miCRUD.initConnection();
-        miCRUD.createStatement();
+        System.out.println("Creada tabla?: "+miCRUD.createTable("enfermos", columnas, restricciones));
+        System.out.println("Borrada tabla?: "+miCRUD.dropTable("enfermos"));
 
-        String miQuery = miCRUD.createTable("enfermos", columnas, restricciones);
-        System.out.println(miQuery);
-        if (miCRUD.useStatement(miQuery)){
-            System.out.println("Creada tabla");
-        } else {System.out.println("ERROR!!!");};
+        String[] vista = miCRUD.readBD(new String[] {"cliente.nombre as cliente",
+                                                    "empleado.nombre as empleado"}, 
+        new String [] {"cliente","empleado","asesora"}, 
+        "cliente.id_cliente = asesora.id_cliente and asesora.id_empleado = empleado.dni");
+        
+        for (String string : vista) {
+         System.out.println(string);   
+        }
      
     }
 }
