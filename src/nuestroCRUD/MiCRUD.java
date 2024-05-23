@@ -187,8 +187,37 @@ public class MiCRUD {
    }
 
    // update = insertar
+   public boolean insertRow(String table, String[] columns, Object[] values) {
 
-   // delete 
+      String query = "INSERT INTO " + table + " (";
+
+      for (int i = 0; i < columns.length - 1; i++) {
+         query = query + columns[i] + ", ";
+      }
+      query = query + columns[columns.length - 1] + ") VALUES (";
+
+      for (int i = 0; i < values.length - 1; i++) {
+         if (values[i].getClass() == Integer.class) {
+            query = query + values[i] + ", ";
+         } else {
+            query = query + "'" + values[i] + "'" + ", ";
+         }
+
+      }
+      if (values[values.length - 1].getClass() == Integer.class) {
+         query = query + values[values.length - 1] + ");";
+      } else {
+         query = query + "'" + values[values.length - 1] + "'" + ");";
+      }
+      try {
+         this.statement.executeUpdate(query);
+         return true;
+      } catch (SQLException e) {
+         return false;
+      }
+   }
+
+   // delete
    // eliminar filas
    public int deleteRows(String table, String condition) {
       String query = "delete from " + table + " where " + condition + ";";
@@ -198,12 +227,12 @@ public class MiCRUD {
          return -1;
       }
 
-      
    }
+
    // eliminar tablas
-   public boolean dropTable(String table){
+   public boolean dropTable(String table) {
       try {
-         this.statement.executeUpdate("DROP TABLE "+table+";");
+         this.statement.executeUpdate("DROP TABLE " + table + ";");
          return true;
       } catch (SQLException e) {
          System.out.println(e.getMessage());
